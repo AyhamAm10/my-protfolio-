@@ -112,13 +112,13 @@ export function HeroSection({ onDownloadClick }: { onDownloadClick: () => void }
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 bg-white/10" />
               </motion.button>
 
-              <motion.button
+              {/* <motion.button
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.97 }}
                 className="px-8 py-4 rounded-2xl font-bold text-white border border-am-violet/30 hover:border-am-violet/50 transition-colors"
               >
                 {t("watchPreview")}
-              </motion.button>
+              </motion.button> */}
             </div>
           </motion.div>
 

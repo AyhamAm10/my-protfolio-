@@ -3,37 +3,53 @@
 import { motion } from "framer-motion";
 import { useLanguage } from "./language-provider";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
-const players = [
-  {
-    id: 1,
-    name: "سيد النجاة",
-    nameEn: "Shadow Master",
-    avatar: "/avatars/player-1.jpg",
-    xp: 12500,
-    winRate: 94,
-  },
-  {
-    id: 2,
-    name: "الأسطورة",
-    nameEn: "The Legend",
-    avatar: "/avatars/player-2.jpg",
-    xp: 11800,
-    winRate: 91,
-  },
-  {
-    id: 3,
-    name: "البطل",
-    nameEn: "The Champion",
-    avatar: "/avatars/player-3.jpg",
-    xp: 10200,
-    winRate: 88,
-  },
-];
+type TopPlayer = {
+  id: number;
+  gamer_name: string;
+  avatarUrl: string | null;
+  xp_points: number;
+  tournament_wins: number;
+  selected_achievement?: {
+    id: number;
+    name: string;
+  } | null;
+};
 
-function PlayerCard({ player, index }: { player: typeof players[0]; index: number }) {
-  const { language, t, dir } = useLanguage();
+const API_BASE_URL ="https://am-arena-api-abgpf6egdeanfjc6.uaenorth-01.azurewebsites.net"
+
+async function fetchTopPlayers(): Promise<TopPlayer[]> {
+  const response = await fetch(`${API_BASE_URL}/user/best?limit=3&page=1`, {
+    cache: "no-store",
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to load top players");
+  }
+
+  const payload = await response.json();
+  const data = Array.isArray(payload) ? payload : payload?.data ?? [];
+
+  return data.slice(0, 3).map((player: any) => ({
+    id: player.id,
+    gamer_name: player.gamer_name ?? player.full_name ?? `Player ${player.id}`,
+    avatarUrl: player.avatarUrl ?? null,
+    xp_points: Number(player.xp_points ?? 0),
+    tournament_wins: Array.isArray(player.wonTournaments)
+      ? player.wonTournaments.length
+      : 0,
+    selected_achievement: player.selected_achievement
+      ? {
+          id: player.selected_achievement.id,
+          name: player.selected_achievement.name,
+        }
+      : null,
+  }));
+}
+
+function PlayerCard({ player, index }: { player: TopPlayer; index: number }) {
+  const { t, dir } = useLanguage();
   const [rotateX, setRotateX] = useState(0);
   const [rotateY, setRotateY] = useState(0);
 
@@ -80,16 +96,16 @@ function PlayerCard({ player, index }: { player: typeof players[0]; index: numbe
         {/* Avatar - dominates top half */}
         <div className="relative h-48 overflow-hidden">
           <Image
-            src={player.avatar}
-            alt={language === "ar" ? player.name : player.nameEn}
+            src={player.avatarUrl || "/avatars/player-1.jpg"}
+            alt={player.gamer_name}
             fill
             className="object-cover object-center"
           />
           {/* Subtle gradient overlay at bottom */}
-          <div className="absolute inset-0 bg-gradient-to-t from-[#191423] via-transparent to-transparent" />
+          <div className="absolute inset-0 bg-linear-to-t from-[#191423] via-transparent to-transparent" />
           
           {/* Rank badge */}
-          <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gradient-to-br from-am-gold to-yellow-600 flex items-center justify-center font-bold text-white text-sm">
+          <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-linear-to-br from-am-gold to-yellow-600 flex items-center justify-center font-bold text-white text-sm">
             #{index + 1}
           </div>
         </div>
@@ -97,22 +113,24 @@ function PlayerCard({ player, index }: { player: typeof players[0]; index: numbe
         {/* Player info */}
         <div className="p-5">
           <h3 className="text-xl font-bold text-white mb-1">
-            {language === "ar" ? player.name : player.nameEn}
+            {player.gamer_name}
           </h3>
-          <p className="text-am-violet/70 text-sm mb-4">{t("topPlayer")}</p>
+          <p className="text-am-violet/70 text-sm mb-4">
+            {player.selected_achievement?.name ?? t("topPlayer")}
+          </p>
 
           {/* Stats - clean minimalist */}
           <div className="flex justify-between items-center gap-4">
             <div className="flex-1">
               <p className="text-white/40 text-xs uppercase tracking-wider mb-1">{t("xp")}</p>
               <p className="text-am-gold font-semibold text-lg">
-                {player.xp.toLocaleString()}
+                {player.xp_points.toLocaleString()}
               </p>
             </div>
             <div className="w-px h-10 bg-white/10" />
             <div className="flex-1 text-right">
-              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">{t("winRate")}</p>
-              <p className="text-green-400 font-semibold text-lg">{player.winRate}%</p>
+              <p className="text-white/40 text-xs uppercase tracking-wider mb-1">Tournament Wins</p>
+              <p className="text-green-400 font-semibold text-lg">{player.tournament_wins}</p>
             </div>
           </div>
         </div>
@@ -131,6 +149,81 @@ function PlayerCard({ player, index }: { player: typeof players[0]; index: numbe
 
 export function CompetitorsSection() {
   const { t, dir } = useLanguage();
+  const [players, setPlayers] = useState<TopPlayer[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadPlayers() {
+      try {
+        setIsLoading(true);
+        setError(null);
+        const data = await fetchTopPlayers();
+        if (!cancelled) {
+          setPlayers(data);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : "Failed to load top players");
+          setPlayers([]);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadPlayers();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const content = useMemo(() => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+          {[0, 1, 2].map((index) => (
+            <div
+              key={index}
+              className="relative rounded-3xl overflow-hidden bg-[#191423] border border-[rgba(139,92,246,0.3)] animate-pulse"
+            >
+              <div className="h-48 bg-white/10" />
+              <div className="p-5 space-y-4">
+                <div className="h-6 w-2/3 rounded bg-white/10" />
+                <div className="h-4 w-1/2 rounded bg-white/10" />
+                <div className="flex items-center gap-4">
+                  <div className="h-12 flex-1 rounded bg-white/10" />
+                  <div className="w-px h-10 bg-white/10" />
+                  <div className="h-12 flex-1 rounded bg-white/10" />
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    if (error || players.length === 0) {
+      return (
+        <div className="max-w-4xl mx-auto rounded-3xl border border-[rgba(139,92,246,0.3)] bg-[#191423] px-6 py-12 text-center text-white/70">
+          {error ? "Unable to load top players right now." : "No players found."}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        {players.map((player, index) => (
+          <PlayerCard key={player.id} player={player} index={index} />
+        ))}
+      </div>
+    );
+  }, [error, isLoading, players]);
 
   return (
     <section className="relative py-24 overflow-hidden" dir={dir}>
@@ -150,11 +243,7 @@ export function CompetitorsSection() {
         </motion.div>
 
         {/* Player cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-          {players.map((player, index) => (
-            <PlayerCard key={player.id} player={player} index={index} />
-          ))}
-        </div>
+        {content}
       </div>
     </section>
   );
