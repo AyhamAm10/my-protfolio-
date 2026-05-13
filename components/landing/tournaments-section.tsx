@@ -238,7 +238,7 @@ export function TournamentsSection() {
               </div>
 
               {/* Footer */}
-              <div className="px-6 py-4 bg-white/5 border-t border-white/10">
+              {/* <div className="px-6 py-4 bg-white/5 border-t border-white/10">
                 <motion.button
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
@@ -246,7 +246,7 @@ export function TournamentsSection() {
                 >
                   انضم الآن
                 </motion.button>
-              </div>
+              </div> */}
             </motion.div>
               )
             })
