@@ -9,20 +9,20 @@ interface HeroSectionProps {
 
 export function HeroSection({ onDownloadClick }: HeroSectionProps) {
   return (
-    <section id="hero" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section id="hero" className="relative isolate min-h-screen w-full flex items-center justify-center overflow-hidden">
       {/* Video Background */}
-      <div className="absolute inset-0 z-0">
+      <div className="fixed inset-0 z-0 w-screen h-dvh pointer-events-none">
         <video
           autoPlay
           muted
           loop
           playsInline
-          className="w-full h-full object-cover"
+          className="h-full w-full object-cover object-center"
         >
           <source src="/videos/hero.mp4" type="video/mp4" />
         </video>
         {/* Dark Overlay with gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#0f0a1e]/80 via-[#0f0a1e]/60 to-[#0f0a1e]" />
+        <div className="absolute inset-0 bg-linear-to-b from-[#0f0a1e]/80 via-[#0f0a1e]/60 to-[#0f0a1e]" />
       </div>
 
       {/* Content */}
@@ -76,7 +76,7 @@ export function HeroSection({ onDownloadClick }: HeroSectionProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={onDownloadClick}
-            className="px-10 py-4 rounded-2xl bg-gradient-to-l from-[#d946ef] to-[#22d3ee] text-white text-xl font-bold animate-pulse-glow"
+            className="px-10 py-4 rounded-2xl bg-linear-to-l from-[#d946ef] to-[#22d3ee] text-white text-xl font-bold animate-pulse-glow"
           >
             حمّل التطبيق الآن
           </motion.button>

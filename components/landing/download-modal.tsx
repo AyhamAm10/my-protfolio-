@@ -10,7 +10,7 @@ interface DownloadModalProps {
   onClose: () => void
 }
 
-const APK_URL = "https://expo.dev/artifacts/eas/nermjesj5uBdNymUYt4EXh.apk"
+const APK_URL = "https://expo.dev/artifacts/eas/cuou7SiDgkxVXEHveAHEzQ.apk"
 
 export function DownloadModal({ isOpen, onClose }: DownloadModalProps) {
   const [isDesktop, setIsDesktop] = useState(false)
