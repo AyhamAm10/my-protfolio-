@@ -10,12 +10,20 @@ import { LeaderboardSection } from "@/components/landing/leaderboard-section"
 import { FAQSection } from "@/components/landing/faq-section"
 import { Footer } from "@/components/landing/footer"
 import { DownloadModal } from "@/components/landing/download-modal"
+import { MaintenanceSection } from "@/components/landing/maintenance-section"
+
+// وضع الصيانة مفعل حالياً (لتخطي الصيانة في المستقبل، قم بتغيير القيمة إلى false)
+const IS_MAINTENANCE_MODE = true
 
 export default function Home() {
   const [isDownloadModalOpen, setIsDownloadModalOpen] = useState(false)
 
   const openDownloadModal = () => setIsDownloadModalOpen(true)
   const closeDownloadModal = () => setIsDownloadModalOpen(false)
+
+  if (IS_MAINTENANCE_MODE) {
+    return <MaintenanceSection />
+  }
 
   return (
     <main className="min-h-screen bg-[#0f0a1e]">
